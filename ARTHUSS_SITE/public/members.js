@@ -2,6 +2,7 @@
 (function(){
  const node=document.getElementById('arthus-config');const config=JSON.parse(node.textContent);const office=config.rooms.find(r=>r.id==='community');
  if(office){office.name='AI OFFICE';office.ko='AI 문서 작업실';office.desc='NARAE OFFICE · 문서 편집과 AI 작업을 한곳에서. PREMIUM·ADMIN 다운로드.';office.thumb='arthus-robot.png';node.textContent=JSON.stringify(config)}
+ const skills=config.rooms.find(r=>r.id==='archive');if(skills){skills.name='AI SKILLS';skills.ko='관리자 스킬 라이브러리';skills.desc='스킬 소개·사용 안내·비공개 자료 등록 및 다운로드. ADMIN 전용.';skills.thumb='skills-hero.png';skills.banners=[];node.textContent=JSON.stringify(config)}
 })();
 (function(){
 'use strict';
@@ -28,11 +29,12 @@ update();requireUser();
 
 (function(){
  const style=document.createElement('style');style.textContent='.office-label{position:absolute;left:14%;top:7%;width:84%;height:21%;display:flex;align-items:center;justify-content:center;border:2px solid #e9ad51;border-radius:999px;background:linear-gradient(90deg,#221b12,#342718 55%,#20170e);box-shadow:0 0 8px #ffb94e,inset 0 0 12px #725023;color:#fff5d8;text-shadow:0 0 7px #ffd17b;font:600 clamp(13px,1.3vw,26px)/1 Arial,sans-serif;letter-spacing:.025em;transform:skewY(27deg);pointer-events:none}';document.head.append(style);
+ const extra=document.createElement('style');extra.textContent='.office-label.skills-label{left:8%;top:15%;width:90%;height:17%;transform:skewY(10deg);font-size:clamp(10px,.95vw,18px)}';document.head.append(extra);
  const spots=document.getElementById('hallSpots');
- function decorate(){for(const button of spots.querySelectorAll('button[aria-label^="AI OFFICE "]')){if(button.querySelector('.office-label'))continue;const label=document.createElement('span');label.className='office-label';label.textContent='AI OFFICE';label.setAttribute('aria-hidden','true');button.append(label)}}
+ function decorate(){for(const button of spots.querySelectorAll('button[aria-label^="AI OFFICE "],button[aria-label^="AI SKILLS "]')){if(button.querySelector('.office-label'))continue;const label=document.createElement('span');const skills=button.getAttribute('aria-label').startsWith('AI SKILLS ');label.className='office-label'+(skills?' skills-label':'');label.textContent=skills?'AI SKILLS':'AI OFFICE';label.setAttribute('aria-hidden','true');button.append(label)}}
  new MutationObserver(decorate).observe(spots,{childList:true});decorate();
  const card=document.getElementById('card');
- function cardLabels(){if(document.getElementById('cardName').textContent==='AI OFFICE'){document.getElementById('cardHint').textContent='클릭하여 소개·다운로드 열기';document.getElementById('cardGo').textContent='소개·다운로드'}}
+ function cardLabels(){if(document.getElementById('cardName').textContent==='AI OFFICE'){document.getElementById('cardHint').textContent='클릭하여 소개·다운로드 열기';document.getElementById('cardGo').textContent='소개·다운로드'}else if(document.getElementById('cardName').textContent==='AI SKILLS'){document.getElementById('cardHint').textContent='ADMIN 전용 · 스킬 소개·다운로드';document.getElementById('cardGo').textContent='AI SKILLS 열기'}}
  new MutationObserver(cardLabels).observe(document.getElementById('cardName'),{childList:true});
- document.addEventListener('click',function(event){const spot=event.target.closest('#hallSpots button[aria-label^="AI OFFICE "]');const go=event.target.closest('#cardGo')&&document.getElementById('cardName').textContent==='AI OFFICE';if(!spot&&!go)return;if(spot&&window.matchMedia('(hover: none), (pointer: coarse)').matches&&card.hidden)return;event.preventDefault();event.stopImmediatePropagation();location.assign('/community.html#download')},true);
+ document.addEventListener('click',function(event){const spot=event.target.closest('#hallSpots button[aria-label^="AI OFFICE "],#hallSpots button[aria-label^="AI SKILLS "]');const name=spot?spot.getAttribute('aria-label'):document.getElementById('cardName').textContent;const skills=name.startsWith('AI SKILLS');const go=event.target.closest('#cardGo')&&['AI OFFICE','AI SKILLS'].includes(name);if(!spot&&!go)return;if(spot&&window.matchMedia('(hover: none), (pointer: coarse)').matches&&card.hidden)return;event.preventDefault();event.stopImmediatePropagation();if(skills){ARTHUSMembers.requireAdmin().then(allowed=>{if(allowed)location.assign('/skills.html')})}else location.assign('/community.html#download')},true);
 })();
