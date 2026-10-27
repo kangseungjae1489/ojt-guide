@@ -1,8 +1,8 @@
 'use strict';
-const button=document.getElementById('downloadBtn'),status=document.getElementById('downloadStatus');
-button.addEventListener('click',async()=>{
- button.disabled=true;status.textContent='현재 회원 권한을 확인하고 있습니다…';
- try{const response=await fetch('/.netlify/functions/auth?action=download',{credentials:'same-origin',cache:'no-store'});const data=await response.json();if(response.status===401){status.textContent='자료실에서 먼저 로그인해주세요. 다운로드는 PREMIUM·ADMIN 전용입니다.';return}if(!response.ok)throw Error(data.error||'권한을 확인하지 못했습니다.');status.textContent=data.message||'다운로드 권한이 있습니다. 설치파일은 준비 중입니다.';button.textContent='설치파일 준비 중';}
- catch(error){status.textContent=error.message==='Failed to fetch'?'서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.':error.message}
- finally{button.disabled=false}
-});
+const button=document.getElementById('downloadBtn'),status=document.getElementById('downloadStatus'),platformButtons=[...document.querySelectorAll('[data-platform]')];
+function enable(yes){for(const b of platformButtons)b.disabled=!yes}
+async function request(file){const response=await fetch('/.netlify/functions/auth?action=download'+(file?'&file='+encodeURIComponent(file):''),{credentials:'same-origin',cache:'no-store'});let data;try{data=await response.json()}catch{throw Error('서버 응답을 확인하지 못했습니다. 다시 시도해주세요.')}if(!response.ok){const error=Error(response.status===401?'자료실에서 먼저 로그인해주세요. 다운로드는 PREMIUM·ADMIN 전용입니다.':data.error||'권한을 확인하지 못했습니다.');error.status=response.status;throw error}return data}
+async function refresh(){button.disabled=true;enable(false);status.textContent='현재 회원 권한을 확인하고 있습니다…';try{const data=await request();if(!data.available)throw Error('설치파일을 준비하고 있습니다.');enable(true);status.textContent='다운로드 권한이 있습니다. 운영체제에 맞는 파일을 선택하세요.'}catch(error){status.textContent=error.message}finally{button.disabled=false}}
+button.addEventListener('click',refresh);
+for(const b of platformButtons)b.addEventListener('click',async()=>{enable(false);status.textContent='다운로드 권한을 다시 확인하고 있습니다…';try{const data=await request(b.dataset.platform);const url=new URL(data.url);if(url.origin!=='https://github.com'||!url.pathname.startsWith('/narae0930/narae-office/releases/download/v1.0.0/'))throw Error('다운로드 주소를 확인하지 못했습니다.');const link=document.createElement('a');link.href=url.href;link.rel='noreferrer';link.referrerPolicy='no-referrer';document.body.append(link);link.click();link.remove();status.textContent=data.label+' 파일을 요청했습니다. 브라우저의 다운로드 목록을 확인하세요.';enable(true)}catch(error){status.textContent=error.message;enable(false)}});
+refresh();
