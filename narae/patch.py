@@ -71,7 +71,7 @@ change(home,"import logoLockup from './assets/narae-logo.svg'\n","import logoLoc
 change(home,'        <nav className="sidebar-nav">','        <div className="narae-sidebar-tag">ROSE GOLD EDITION</div>\n        <nav className="sidebar-nav">')
 change(home,"        {renderFolderPanel()}\n        <AccountEntry","        {renderFolderPanel()}\n        <div className=\"narae-maker\"><img src={naraeMascot} alt=\"\" /><div><b>루미나래 · 제작자</b><small>인천직업전문학교 미용 주임교사<br/>AI 피부 분석 앱 개발 중</small></div></div>\n        <AccountEntry")
 ai="apps/shell/src/renderer/src/KbAskPanel.tsx"
-change(ai,"import { useCallback, useEffect, useRef, useState } from 'react'","import naraeMascot from './assets/narae-mascot.svg'\nimport { useCallback, useEffect, useRef, useState } from 'react'")
+change(ai,"import { useEffect, useRef, useState } from 'react'","import naraeMascot from './assets/narae-mascot.svg'\nimport { useEffect, useRef, useState } from 'react'")
 change(ai,'    <div className="kb-ask">','    <div className="kb-ask"><div className="narae-ai-head"><img src={naraeMascot} alt=\"\"/><b>AI 루미나래</b></div>')
 theme="""/* NARAE OFFICE rose-gold branding; no editor/AI logic changes */
 :root{--accent:#b85c78;--accent-hover:#a54867;--accent-soft:#fae5ed;--color-brand-secondary:#b85c78;--color-border-brand:#b85c78;--bg-content:#fffafa;--surface-subtle:#fff5f4;--border:#ead7d6;--bg-hover:#fcebee;}
