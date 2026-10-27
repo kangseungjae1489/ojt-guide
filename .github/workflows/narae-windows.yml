@@ -1,0 +1,85 @@
+name: Build NARAE OFFICE Windows EXE
+on:
+  push:
+    branches: [narae-office-installer]
+    paths:
+      - 'narae/**'
+      - '.github/workflows/narae-windows.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  installer:
+    runs-on: windows-2025
+    timeout-minutes: 120
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download NARAE branding instructions
+        uses: actions/checkout@v4
+        with:
+          path: brand
+          persist-credentials: false
+      - name: Fetch original open-source engine at locked version
+        uses: actions/checkout@v4
+        with:
+          repository: pblsketch/openoffice
+          ref: 9e2dea47cf7606e89a60ec358acf09b67cdf7812
+          path: upstream
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: upstream/package-lock.json
+      - name: Install Rust compiler
+        uses: dtolnay/rust-toolchain@stable
+      - name: Apply independent NARAE OFFICE brand
+        run: python brand/narae/patch.py upstream
+      - name: Install app dependencies
+        working-directory: upstream
+        run: npm ci
+      - name: Build the original AI and document apps
+        working-directory: upstream
+        run: npm run build:all
+      - name: Prepare spreadsheet executable for installer
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          engine=apps/sheets/native/xlsx-engine/target
+          mkdir -p "$engine/x86_64-pc-windows-gnu/release"
+          cp "$engine/release/xlsx-sidecar.exe" "$engine/x86_64-pc-windows-gnu/release/"
+      - name: Package independent NARAE Windows app
+        working-directory: upstream
+        run: npm run dist:win -w @genoffice/shell -- --publish never
+      - name: Validate the Windows installer and run export smoke tests
+        working-directory: upstream
+        run: |
+          set -euo pipefail
+          dir="apps/shell/release"
+          exe="$dir/win-unpacked/NARAE OFFICE.exe"
+          installer="$dir/NARAE_OFFICE_Setup-0.12.4.exe"
+          test -f "$exe"
+          test -s "$installer"
+          test -f "$dir/latest.yml"
+          grep -q "NARAE_OFFICE_Setup-0.12.4.exe" "$dir/latest.yml"
+          test -f "$dir/win-unpacked/resources/native/xlsx-sidecar.exe"
+          test -f "$dir/win-unpacked/resources/NOTICE.txt"
+          work="$RUNNER_TEMP/narae-check"
+          mkdir -p "$work"
+          printf '# Test\n\nNARAE OFFICE\n' > "$work/check.md"
+          "$exe" --headless-export "$work/check.md" --to pdf --out "$work/check.pdf" --json
+          test -s "$work/check.pdf"
+      - name: Store NARAE OFFICE installer for USB distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: NARAE_OFFICE_Setup_Windows
+          path: |
+            upstream/apps/shell/release/NARAE_OFFICE_Setup-*.exe
+            upstream/apps/shell/release/latest.yml
+          if-no-files-found: error
+          retention-days: 30
