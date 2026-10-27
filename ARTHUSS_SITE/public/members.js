@@ -1,3 +1,8 @@
+// Keep the existing hall artwork and replace the former COMMUNITY entry.
+(function(){
+ const node=document.getElementById('arthus-config');const config=JSON.parse(node.textContent);const office=config.rooms.find(r=>r.id==='community');
+ if(office){office.name='AI OFFICE';office.ko='AI 문서 작업실';office.desc='NARAE OFFICE · 문서 편집과 AI 작업을 한곳에서. PREMIUM·ADMIN 다운로드.';office.thumb='arthus-robot.png';node.textContent=JSON.stringify(config)}
+})();
 (function(){
 'use strict';
 const $=id=>document.getElementById(id);let user=null,mode='login',intent='entry';
@@ -21,10 +26,13 @@ $('memberCreate').onsubmit=async e=>{e.preventDefault();const form=e.target,butt
 update();requireUser();
 })();
 
-// Add a product introduction card only inside the COMMUNITY room.
 (function(){
- const title=document.getElementById('roomName'),box=document.getElementById('roomBanners');
- if(!title||!box)return;
- function attach(){if(title.textContent.trim()!=='COMMUNITY'||document.getElementById('officeCommunityCard'))return;const link=document.createElement('a');link.id='officeCommunityCard';link.className='banner';link.href='/community.html';for(const [cls,txt]of [['banner-title','NARAE OFFICE'],['banner-desc','ARTHUS와 함께하는 AI 문서 작업 공간 · 소개 및 PREMIUM 다운로드 안내'],['banner-state','자세히 보기 →']]){const span=document.createElement('span');span.className=cls;span.textContent=txt;link.append(span)}box.prepend(link)}
- new MutationObserver(attach).observe(box,{childList:true});attach();
+ const style=document.createElement('style');style.textContent='.office-label{position:absolute;left:14%;top:7%;width:84%;height:21%;display:flex;align-items:center;justify-content:center;border:2px solid #e9ad51;border-radius:999px;background:linear-gradient(90deg,#221b12,#342718 55%,#20170e);box-shadow:0 0 8px #ffb94e,inset 0 0 12px #725023;color:#fff5d8;text-shadow:0 0 7px #ffd17b;font:600 clamp(13px,1.3vw,26px)/1 Arial,sans-serif;letter-spacing:.025em;transform:skewY(27deg);pointer-events:none}';document.head.append(style);
+ const spots=document.getElementById('hallSpots');
+ function decorate(){for(const button of spots.querySelectorAll('button[aria-label^="AI OFFICE "]')){if(button.querySelector('.office-label'))continue;const label=document.createElement('span');label.className='office-label';label.textContent='AI OFFICE';label.setAttribute('aria-hidden','true');button.append(label)}}
+ new MutationObserver(decorate).observe(spots,{childList:true});decorate();
+ const card=document.getElementById('card');
+ function cardLabels(){if(document.getElementById('cardName').textContent==='AI OFFICE'){document.getElementById('cardHint').textContent='클릭하여 소개·다운로드 열기';document.getElementById('cardGo').textContent='소개·다운로드'}}
+ new MutationObserver(cardLabels).observe(document.getElementById('cardName'),{childList:true});
+ document.addEventListener('click',function(event){const spot=event.target.closest('#hallSpots button[aria-label^="AI OFFICE "]');const go=event.target.closest('#cardGo')&&document.getElementById('cardName').textContent==='AI OFFICE';if(!spot&&!go)return;if(spot&&window.matchMedia('(hover: none), (pointer: coarse)').matches&&card.hidden)return;event.preventDefault();event.stopImmediatePropagation();location.assign('/community.html#download')},true);
 })();
