@@ -20,3 +20,11 @@ async function loadMembers(){const list=$('membersList');list.replaceChildren();
 $('memberCreate').onsubmit=async e=>{e.preventDefault();const form=e.target,button=form.querySelector('button');button.disabled=true;try{await api('create',Object.fromEntries(new FormData(form)));form.reset();$('membersStatus').textContent='회원을 추가했습니다. 임시 비밀번호를 회원에게 전달해 주세요.';await loadMembers()}catch(e){$('membersStatus').textContent=e.message}finally{button.disabled=false}};
 update();requireUser();
 })();
+
+// Add a product introduction card only inside the COMMUNITY room.
+(function(){
+ const title=document.getElementById('roomName'),box=document.getElementById('roomBanners');
+ if(!title||!box)return;
+ function attach(){if(title.textContent.trim()!=='COMMUNITY'||document.getElementById('officeCommunityCard'))return;const link=document.createElement('a');link.id='officeCommunityCard';link.className='banner';link.href='/community.html';for(const [cls,txt]of [['banner-title','NARAE OFFICE'],['banner-desc','ARTHUS와 함께하는 AI 문서 작업 공간 · 소개 및 PREMIUM 다운로드 안내'],['banner-state','자세히 보기 →']]){const span=document.createElement('span');span.className=cls;span.textContent=txt;link.append(span)}box.prepend(link)}
+ new MutationObserver(attach).observe(box,{childList:true});attach();
+})();

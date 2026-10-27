@@ -22,7 +22,7 @@ export function makeHandler({store,env,privateConfig,now=Date.now}){
    const action=new URL(req.url).searchParams.get('action')||'me';
    if(!['GET','POST'].includes(req.method))throw failure(405,'지원하지 않는 요청입니다.');
    if(req.method==='POST'&&req.headers.get('origin')!==new URL(req.url).origin)throw failure(403,'허용되지 않은 요청입니다.');
-   if(req.method==='GET'&&!['me','users','private'].includes(action))throw failure(405,'POST 요청이 필요합니다.');
+   if(req.method==='GET'&&!['me','users','private','download'].includes(action))throw failure(405,'POST 요청이 필요합니다.');
    let b={};if(req.method==='POST'){if(!req.headers.get('content-type')?.includes('application/json'))throw failure(415,'JSON 요청이 필요합니다.');const raw=await req.text();if(raw.length>8192)throw failure(413,'요청이 너무 큽니다.');try{b=JSON.parse(raw)}catch{throw failure(400,'입력 형식이 올바르지 않습니다.')}}
    await bootstrap();
    if(action==='register'||action==='login'){
@@ -35,6 +35,7 @@ export function makeHandler({store,env,privateConfig,now=Date.now}){
    if(action==='logout'){await transaction(s=>{delete s.sessions[digest(token(req))]});headers['Set-Cookie']=cookieName+'=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0';return send({ok:true})}
    if(action==='password'){if(typeof b.password!=='string'||b.password.length<8||b.password.length>128)throw failure(400,'새 비밀번호는 8~128자로 입력해 주세요.');if(typeof b.currentPassword!=='string'||!await verifyPassword(b.currentPassword,u.hash))throw failure(400,'현재 비밀번호를 확인해 주세요.');const hash=await hashPassword(b.password);await transaction(s=>{const me=authenticate(s,req);if(me.hash!==u.hash)throw failure(409,'다시 로그인해 주세요.');me.hash=hash;me.version++;me.mustChange=false});headers['Set-Cookie']=cookieName+'=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0';return send({ok:true})}
    if(u.mustChange)throw failure(403,'임시 비밀번호를 먼저 변경해 주세요.');
+   if(action==='download'){if(!['PREMIUM','ADMIN'].includes(u.role))throw failure(403,'PREMIUM MEMBER와 ADMIN만 다운로드할 수 있습니다.');return send({available:false,message:'다운로드 권한이 있습니다. NARAE OFFICE 설치파일은 준비 중입니다.'})}
    if(action==='private'){admin(u);return send({private:privateConfig})}
    admin(u);
    if(action==='users')return send({users:Object.values(row.data.users).map(safeUser)});
