@@ -1,0 +1,97 @@
+name: Build MENTOR.K VOICE STUDIO Installers
+
+on:
+  push:
+    branches: [mentor-k-voice-studio]
+    paths:
+      - 'mentor-k/**'
+      - '.github/workflows/mentor-k-voice.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 70
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        working-directory: mentor-k
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify real Python voice-job implementation
+        run: |
+          python -m py_compile engine/voice_engine.py
+          echo '{"segments":[{"start":0,"end":2.1,"text":"MENTOR K 확인"}],"format":"srt"}' | python engine/voice_engine.py export | grep -q 'MENTOR K'
+      - name: Install Electron dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate Electron application code
+        run: npm run check
+      - name: Build Windows installer
+        run: npm run dist:win
+      - name: Check actual Windows installer and embedded engine
+        run: |
+          test -s 'dist/MENTOR_K_VOICE_Setup-0.2.0.exe'
+          test -s 'dist/win-unpacked/MENTOR.K VOICE STUDIO.exe'
+          test -s 'dist/win-unpacked/resources/voice-engine/voice_engine.py'
+          test -s 'dist/win-unpacked/resources/app.asar'
+          sha256sum 'dist/MENTOR_K_VOICE_Setup-0.2.0.exe' > 'dist/SHA256SUMS.txt'
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MENTOR_K_VOICE_Windows_Installer
+          path: |
+            mentor-k/dist/MENTOR_K_VOICE_Setup-*.exe
+            mentor-k/dist/SHA256SUMS.txt
+          retention-days: 30
+          if-no-files-found: error
+
+  mac:
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    defaults:
+      run:
+        working-directory: mentor-k
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate local voice engine scripts
+        run: python -m py_compile engine/voice_engine.py
+      - name: Install Electron dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify Electron application syntax
+        run: npm run check
+      - name: Build Intel and Apple Silicon packages
+        run: npx electron-builder --mac dmg zip --x64 --arm64 --publish never
+      - name: Verify DMG and engine inclusion
+        run: |
+          test -n "$(find dist -name '*.dmg' -print -quit)"
+          test -n "$(find dist -name '*-arm64.dmg' -print -quit)"
+          test -n "$(find dist -name '*-x64.dmg' -print -quit)"
+      - name: Upload Mac DMG files
+        uses: actions/upload-artifact@v4
+        with:
+          name: MENTOR_K_VOICE_Mac_Installer
+          path: |
+            mentor-k/dist/*.dmg
+            mentor-k/dist/*.zip
+          retention-days: 30
+          if-no-files-found: error
