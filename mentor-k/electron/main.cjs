@@ -1,5 +1,5 @@
 'use strict';
-const {app,BrowserWindow,ipcMain,dialog,shell}=require('electron');
+const {app,BrowserWindow,ipcMain,dialog,shell,session}=require('electron');
 const fs=require('node:fs');
 const fsp=require('node:fs/promises');
 const path=require('node:path');
@@ -119,6 +119,10 @@ function createWindow(){
  mainWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
 }
 app.whenReady().then(()=>{
+ session.defaultSession.setPermissionRequestHandler((wc,permission,callback)=>{
+  const allowed=wc?.getURL()?.startsWith('file://') && permission==='media';
+  callback(Boolean(allowed));
+ });
  ensureDirs();
  ipcMain.handle('mentor:open',async()=>{
   const r=await dialog.showOpenDialog(mainWindow,{properties:['openFile'],filters:[{name:'녹음·오디오·동영상',extensions:['wav','mp3','m4a','flac','ogg','opus','webm','aac','mp4','mov']}]});
