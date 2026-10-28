@@ -1,5 +1,5 @@
 'use strict';
-const {app,BrowserWindow,ipcMain,dialog,shell,session}=require('electron');
+const {app,BrowserWindow,ipcMain,dialog,shell,session,Menu}=require('electron');
 const fs=require('node:fs');
 const fsp=require('node:fs/promises');
 const path=require('node:path');
@@ -20,15 +20,31 @@ function ensureDirs(){for(const n of ['', 'recordings','outputs','profiles','eng
 function worker(cmd,args=[],options={}){
  return new Promise((resolve,reject)=>{
   const p=cp.spawn(cmd,args,{cwd:userData(),env:env(),windowsHide:true,stdio:['pipe','pipe','pipe']});
-  let stdout='',stderr='';const cap=2_000_000;
+  let stdout='',stderr='',timedOut=false,settled=false;
+  const cap=2000000;
+  const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(timer);fn(value);};
   p.stdout.setEncoding('utf8');p.stderr.setEncoding('utf8');
-  p.stdout.on('data',s=>{stdout=(stdout+s).slice(-cap);if(options.progress)status(s.toString().trim().slice(-250));});
-  p.stderr.on('data',s=>{stderr=(stderr+s).slice(-cap);if(options.progress)status(s.toString().trim().slice(-250));});
-  const timeout=setTimeout(()=>p.kill(),options.timeout||40*60*1000);
-  p.on('error',err=>{clearTimeout(timeout);reject(err);});
-  p.on('close',code=>{clearTimeout(timeout);if(code===0)resolve({stdout,stderr});else reject(Error((stderr||stdout||'작업이 실패했습니다.').slice(-2500)))});
-  if(options.stdin!==undefined)p.stdin.end(JSON.stringify(options.stdin));
-  else p.stdin.end();
+  p.stdout.on('data',v=>{stdout=(stdout+v).slice(-cap);if(options.progress)status('AI 엔진 설치 진행 중...');});
+  p.stderr.on('data',v=>{stderr=(stderr+v).slice(-cap);if(options.progress)status('AI 엔진 설치 진행 중...');});
+  const timer=setTimeout(()=>{timedOut=true;p.kill();},options.timeout||40*60*1000);
+  p.on('error',err=>finish(reject,err));
+  p.on('close',(code,signal)=>{
+   if(code===0)return finish(resolve,{stdout,stderr});
+   const report=path.join(userData(),'engine','last-error.txt');
+   try{
+    fs.mkdirSync(path.dirname(report),{recursive:true});
+    fs.writeFileSync(report,[new Date().toISOString(),'program='+path.basename(cmd),'exit='+code,'signal='+signal,'timeout='+timedOut,'===== OUTPUT =====',stdout.slice(-12000),'===== DIAGNOSTICS =====',stderr.slice(-24000)].join('\n'),'utf8');
+   }catch{}
+   let structured=null;
+   for(const line of stdout.trim().split(/\r?\n/).reverse()){
+    try{const o=JSON.parse(line);if(o&&o.ok===false&&typeof o.error==='string'){structured=o.error;break;}}catch{}
+   }
+   const fallback=timedOut?'AI 엔진 실행 시간이 초과됐습니다.':options.voiceJob==='synth'?'음성 합성 엔진이 비정상 종료됐습니다. PC 메모리, 그래픽카드, 모델 파일을 확인해 주세요.':'로컬 AI 엔진이 비정상 종료됐습니다.';
+   const e=new Error(((structured||fallback)+' [종료 코드 '+code+(signal?' / '+signal:'')+']').slice(0,1000));
+   e.diagnosticPath=report;
+   finish(reject,e);
+  });
+  if(options.stdin!==undefined)p.stdin.end(JSON.stringify(options.stdin));else p.stdin.end();
  });
 }
 async function download(url,out,hop=0){
@@ -96,7 +112,7 @@ async function runPython(command,payload){
  running=true;
  try{
   status(command==='transcribe'?'녹음 내용을 인식하는 중...':command==='synth'?'참조 음색으로 음성을 생성하는 중...':'작업 처리 중...');
-  const {stdout}=await worker(venvPy(),[engineSource(),command],{stdin:payload,timeout:60*60*1000});
+  const {stdout}=await worker(venvPy(),[engineSource(),command],{stdin:payload,timeout:60*60*1000,voiceJob:command});
   const line=stdout.trim().split('\n').at(-1);
   let j;
   try{j=JSON.parse(line);}catch{throw Error('음성 엔진 응답을 해석하지 못했습니다: '+stdout.slice(-600));}
@@ -119,6 +135,7 @@ function createWindow(){
  mainWindow.webContents.setWindowOpenHandler(()=>({action:'deny'}));
 }
 app.whenReady().then(()=>{
+ Menu.setApplicationMenu(null);
  session.defaultSession.setPermissionRequestHandler((wc,permission,callback)=>{
   const allowed=wc?.getURL()?.startsWith('file://') && permission==='media';
   callback(Boolean(allowed));
@@ -154,6 +171,7 @@ app.whenReady().then(()=>{
   if(r.canceled||!r.filePath)return false;
   await fsp.writeFile(r.filePath,text,'utf8');return r.filePath;
  });
+ ipcMain.handle('mentor:diagnostics',async()=>{const p=path.join(userData(),'engine','last-error.txt');return {path:p,text:fs.existsSync(p)?(await fsp.readFile(p,'utf8')).slice(-35000):'아직 진단 기록이 없습니다.'};});
  ipcMain.handle('mentor:settings',()=>({dataPath:userData(),transcribe:fs.existsSync(path.join(userData(),'transcribe.installed')),voice:fs.existsSync(path.join(userData(),'voice.installed')),appVersion:app.getVersion()}));
  ipcMain.handle('mentor:codexSummary',async(_e,raw)=>{
   if(typeof raw!=='string'||raw.length>18000)throw Error('18,000자 이내 녹음 텍스트를 선택해 주세요.');
