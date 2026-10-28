@@ -3,7 +3,7 @@
   const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
   const state={audio:null,rows:[],profiles:[],settings:null,recording:false,recorder:null,chunks:[],started:0,selectedPane:'transcribe',busy:false,recent:[]};
   const errorText=e=>e?.message||String(e);
-  const toast=msg=>{const el=$('#toast');el.textContent=String(msg);el.hidden=false;clearTimeout(el._timer);el._timer=setTimeout(()=>el.hidden=true,5200);};
+  const toast=msg=>{const el=$('#toast');const raw=String(msg).replace(/^Error invoking remote method '[^']+': Error:\s*/,'');el.textContent=raw.length>190?raw.slice(0,185)+'… (AI 엔진 설정 → 최근 오류 진단에서 확인)':raw;el.hidden=false;clearTimeout(el._timer);el._timer=setTimeout(()=>el.hidden=true,6500);};
   const say=msg=>{$('#aiReply').textContent=msg;};
   const setBusy=on=>{state.busy=on;$$('.work-pane button,.prompts button,#aiSend').forEach(b=>{if(b.id==='recordBtn'&&state.recording)return;b.disabled=on;});};
   const addRecent=(title,detail)=>{state.recent.unshift({title,detail,at:new Date().toLocaleTimeString('ko-KR')});state.recent=state.recent.slice(0,6);$('#recentList').replaceChildren(...state.recent.map(item=>{const d=document.createElement('div');d.textContent=item.title+' · '+item.detail+' ('+item.at+')';return d;}));};
@@ -24,7 +24,7 @@
   async function updateSettings(){
     try{const s=await window.mentor.settings();state.settings=s;
       $('#sttState').textContent=s.transcribe?'설치됨':'미설치';$('#ttsState').textContent=s.voice?'설치됨':'미설치';
-      $('#sysStt').textContent=s.transcribe?'정상':'설치 필요';$('#sysTts').textContent=s.voice?'정상':'설치 필요';
+      $('#sysStt').textContent=s.transcribe?'설치됨 · 실작동 확인 전':'설치 필요';$('#sysTts').textContent=s.voice?'설치됨 · 실작동 확인 전':'설치 필요';
       $('#engineIndicator').textContent=s.transcribe&&s.voice?'● 로컬 AI 준비됨':s.transcribe?'● 전사 AI 준비됨':'● 엔진 설치 필요';
       if(s.transcribe)await refreshProfiles();
     }catch(e){$('#engineIndicator').textContent='● 확인 실패';}
@@ -204,6 +204,8 @@
     $('#setupSTT').addEventListener('click',()=>installEngine('transcribe'));
     $('#setupTTS').addEventListener('click',()=>installEngine('voice'));
     $('#summarizeBtn').addEventListener('click',codexSummary);
+    $('#diagnosticsBtn').addEventListener('click',async()=>{try{const d=await window.mentor.diagnostics();$('#diagnosticOutput').hidden=false;$('#diagnosticOutput').textContent='진단 파일 위치: '+d.path+'\n\n'+d.text;$('#diagnosticsCopy').hidden=false;}catch(e){toast(errorText(e));}});
+    $('#diagnosticsCopy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#diagnosticOutput').textContent);toast('진단 내용을 복사했습니다.');}catch{toast('진단 내용을 선택한 뒤 Ctrl+C를 누르세요.');}});
     $('#aiSend').addEventListener('click',localAssistant);
     $('#aiInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();localAssistant();}});
     window.mentor.onProgress(s=>{if(s){$('#engineIndicator').textContent='◉ '+s.slice(0,32);$('#ttsResult').textContent=s;}});
