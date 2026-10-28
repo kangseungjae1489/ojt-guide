@@ -1,0 +1,55 @@
+{
+  "name": "mentor-photo",
+  "productName": "MENTOR PHOTO",
+  "version": "0.1.0",
+  "description": "MENTOR PHOTO - independent offline photo editor",
+  "main": "electron/main.cjs",
+  "author": "ARTHUS | MENTOR",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check ui/app.js",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --publish never"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.arthus.mentor.photo",
+    "productName": "MENTOR PHOTO",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "ui/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "MENTOR_PHOTO_Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "MENTOR PHOTO",
+      "uninstallDisplayName": "MENTOR PHOTO"
+    },
+    "mac": {
+      "category": "public.app-category.photography",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "artifactName": "MENTOR_PHOTO-${version}-${arch}.${ext}",
+      "identity": null
+    },
+    "publish": null
+  }
+}
