@@ -12,3 +12,10 @@
 @media(max-width:1390px){.shell{grid-template-columns:245px minmax(520px,1fr) 225px}.identity{min-width:205px}.nav button{padding:0 8px}.assistant{padding:0 8px 8px}.hero h1{font-size:36px}.hero-body{left:23px}.hero-portrait{width:50%}.feature{padding:10px;min-height:123px}}
 @media(max-width:1170px){.shell{grid-template-columns:205px minmax(500px,1fr)}.right{display:none}.identity{min-width:190px}.top-end{display:none}.feature b{font-size:11px}.feature small{font-size:9px}.nav{gap:0}}
 .mk-logo-img{width:60px;height:60px;object-fit:contain;flex:none}.hero-logo-image{width:58px;height:58px;object-fit:contain;filter:brightness(1.35)}.hero-logo{height:58px;margin-top:8px;margin-bottom:4px}
+
+/* V0.2.1: stable vector logo and bounded diagnostic panel */
+svg.mk-logo-img{width:60px;height:60px;flex:none;display:block;overflow:visible}
+svg.hero-logo-image{width:59px;height:59px;display:block}
+.diagnostics{display:flex;gap:8px;flex-wrap:wrap;margin:13px 0}
+.diagnostics pre{width:100%;max-height:195px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#100e0b;border:1px solid #5f4934;border-radius:9px;padding:12px;color:#e0cba7;font:10px/1.55 Consolas,monospace}
+#toast{max-width:min(640px,85vw);white-space:pre-wrap;word-break:break-word}
