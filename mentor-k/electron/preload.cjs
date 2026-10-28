@@ -8,6 +8,7 @@ const api={
  job:(command,payload)=>ipcRenderer.invoke('mentor:job',command,payload),
  saveText:(text,format)=>ipcRenderer.invoke('mentor:saveText',{text,format}),
  settings:()=>ipcRenderer.invoke('mentor:settings'),
+ diagnostics:()=>ipcRenderer.invoke('mentor:diagnostics'),
  codexSummary:(text)=>ipcRenderer.invoke('mentor:codexSummary',text),
  onProgress:(cb)=>{const listener=(_e,status)=>cb(status);ipcRenderer.on('mentor:progress',listener);return()=>ipcRenderer.removeListener('mentor:progress',listener)}
 };
