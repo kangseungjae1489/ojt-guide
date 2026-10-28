@@ -1,0 +1,86 @@
+name: Build MENTOR PHOTO Installer
+
+on:
+  push:
+    branches: [mentor-photo-editor]
+    paths:
+      - 'mentor-photo/**'
+      - '.github/workflows/mentor-photo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows standalone EXE
+    runs-on: windows-2025
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mentor-photo
+        shell: bash
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install app modules
+        run: npm install --no-audit --no-fund
+      - name: Syntax check
+        run: npm run check
+      - name: Build independent installer
+        run: npm run dist:win
+      - name: Check output
+        run: |
+          test -s "dist/MENTOR_PHOTO_Setup-0.1.0.exe"
+          test -s "dist/win-unpacked/MENTOR PHOTO.exe"
+          sha256sum "dist/MENTOR_PHOTO_Setup-0.1.0.exe" > "dist/SHA256SUMS.txt"
+      - name: Upload Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: MENTOR_PHOTO_Windows_Installer
+          path: |
+            mentor-photo/dist/MENTOR_PHOTO_Setup-*.exe
+            mentor-photo/dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  mac:
+    name: Mac standalone DMG
+    runs-on: macos-15
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mentor-photo
+        shell: bash
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install app modules
+        run: npm install --no-audit --no-fund
+      - name: Syntax check
+        run: npm run check
+      - name: Build Intel and Apple Silicon DMG
+        run: npx electron-builder --mac dmg zip --x64 --arm64 --publish never
+      - name: Verify DMG output
+        run: |
+          ls -lh dist/
+          test -n "$(find dist -name '*-x64.dmg' -print -quit)"
+          test -n "$(find dist -name '*-arm64.dmg' -print -quit)"
+      - name: Upload Mac DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: MENTOR_PHOTO_Mac_Installer
+          path: |
+            mentor-photo/dist/*.dmg
+            mentor-photo/dist/*.zip
+          if-no-files-found: error
+          retention-days: 30
