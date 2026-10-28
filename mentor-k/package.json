@@ -1,6 +1,6 @@
 {
   "name": "mentor-k-voice-studio",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "MENTOR.K independent local AI voice studio",
   "main": "electron/main.cjs",
