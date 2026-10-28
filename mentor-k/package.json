@@ -1,0 +1,59 @@
+{
+  "name": "mentor-k-voice-studio",
+  "version": "0.2.0",
+  "private": true,
+  "description": "MENTOR.K independent local AI voice studio",
+  "main": "electron/main.cjs",
+  "license": "MIT",
+  "author": "MENTOR.K",
+  "scripts": {
+    "start": "electron .",
+    "check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check ui/app.js",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --publish never"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "studio.mentork.voice",
+    "productName": "MENTOR.K VOICE STUDIO",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "ui/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "engine",
+        "to": "voice-engine"
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "MENTOR_K_VOICE_Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "MENTOR.K VOICE STUDIO"
+    },
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "artifactName": "MENTOR_K_VOICE-${version}-${arch}.${ext}",
+      "identity": null
+    }
+  }
+}
