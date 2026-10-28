@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>MENTOR PHOTO | Create with clarity</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><path d="M6 33V11L22 28L38 11V33" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M14 34L22 26L30 34" stroke="currentColor" stroke-width="2.5"/></svg></span>
+        <div><div class="brand-name">MENTOR <span>PHOTO</span></div><div class="brand-sub">CREATIVE STUDIO <i></i> v0.1</div></div>
+      </div>
+      <div class="top-project"><span class="status-dot"></span><span id="projectName">새 프로젝트</span><span class="top-divider"></span><span id="imageMeta">사진을 불러와 편집을 시작하세요</span></div>
+      <div class="top-actions">
+        <button class="button subtle" id="undoBtn" title="실행 취소 Ctrl+Z" disabled>↶ <span>실행 취소</span></button>
+        <button class="button subtle" id="redoBtn" title="다시 실행 Ctrl+Y" disabled>↷</button>
+        <span class="top-divider"></span>
+        <button class="button secondary" id="openBtn">＋ 사진 열기</button>
+        <button class="button primary" id="saveBtn" disabled>↥ 내보내기</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="preset-sidebar">
+        <div class="sidebar-kicker">01 / LOOKBOOK</div>
+        <h2>스타일 컬렉션</h2>
+        <p>한 번의 클릭으로 사진에 분위기를 더하세요.</p>
+        <div class="preset-list" id="presetList">
+          <button class="preset-card active" data-preset="original"><span class="preset-thumb p-original"></span><span><b>Original</b><small>원본 컬러</small></span><span class="preset-key">01</span></button>
+          <button class="preset-card" data-preset="portrait"><span class="preset-thumb p-portrait"></span><span><b>Soft Portrait</b><small>인물 · 부드러운 톤</small></span><span class="preset-key">02</span></button>
+          <button class="preset-card" data-preset="golden"><span class="preset-thumb p-golden"></span><span><b>Golden Hour</b><small>따뜻한 햇살</small></span><span class="preset-key">03</span></button>
+          <button class="preset-card" data-preset="cinema"><span class="preset-thumb p-cinema"></span><span><b>Film Noir</b><small>시네마틱 콘트라스트</small></span><span class="preset-key">04</span></button>
+          <button class="preset-card" data-preset="cool"><span class="preset-thumb p-cool"></span><span><b>Cool Mist</b><small>차분한 블루</small></span><span class="preset-key">05</span></button>
+          <button class="preset-card" data-preset="mono"><span class="preset-thumb p-mono"></span><span><b>Monochrome</b><small>깊이 있는 흑백</small></span><span class="preset-key">06</span></button>
+          <button class="preset-card" data-preset="vintage"><span class="preset-thumb p-vintage"></span><span><b>Vintage 90</b><small>필름 감성</small></span><span class="preset-key">07</span></button>
+          <button class="preset-card" data-preset="vivid"><span class="preset-thumb p-vivid"></span><span><b>Vivid Bloom</b><small>선명한 색채</small></span><span class="preset-key">08</span></button>
+        </div>
+        <div class="preset-bottom">
+          <div class="mini-line">MENTOR ORIGINAL SERIES</div>
+          <button id="savePresetBtn" class="text-button" disabled>✧ 현재 설정을 프리셋으로 저장</button>
+          <div class="custom-presets" id="customPresets"></div>
+        </div>
+      </aside>
+
+      <section class="editor">
+        <div class="editor-toolbar">
+          <div class="toolbar-set"><span class="toolbar-label">CANVAS</span><span class="size-display" id="dimensions">사진을 선택하세요</span></div>
+          <div class="toolbar-set center-tools">
+            <button class="tool-btn" id="rotateLeftBtn" title="왼쪽 90° 회전" disabled>⟲</button>
+            <button class="tool-btn" id="rotateRightBtn" title="오른쪽 90° 회전" disabled>⟳</button>
+            <button class="tool-btn" id="flipHBtn" title="좌우 반전" disabled>⇆</button>
+            <button class="tool-btn" id="flipVBtn" title="상하 반전" disabled>⇅</button>
+            <span class="tool-sep"></span>
+            <label for="cropMode">비율</label><select id="cropMode" disabled><option value="free">원본</option><option value="1:1">1 : 1</option><option value="4:5">4 : 5</option><option value="3:2">3 : 2</option><option value="16:9">16 : 9</option></select>
+          </div>
+          <button class="before-btn" id="beforeBtn" title="눌러서 원본 보기 (B)" disabled>◉ 원본 비교</button>
+        </div>
+        <div class="stage" id="dropZone">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon"><svg width="82" height="82" viewBox="0 0 82 82" fill="none"><rect x="13" y="15" width="56" height="50" rx="7" stroke="currentColor" stroke-width="1.8"/><path d="m17 54 16-15 10 9 11-16 13 19" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="29" cy="30" r="5" stroke="currentColor" stroke-width="1.8"/></svg></div>
+            <span class="eyebrow">YOUR CREATIVE CANVAS</span>
+            <h1>사진의 새로운 가능성.</h1>
+            <p>사진을 이곳으로 드래그하거나<br>아래 버튼을 눌러 편집을 시작하세요.</p>
+            <button class="button primary large" id="emptyOpenBtn">사진 불러오기 <span>↗</span></button>
+            <div class="file-hint">JPG · PNG · WEBP · BMP · GIF · AVIF</div>
+          </div>
+          <div class="canvas-wrap" id="canvasWrap" hidden><canvas id="photoCanvas" aria-label="편집 중인 사진"></canvas></div>
+          <div class="drop-overlay" id="dropOverlay" hidden><div>✦ &nbsp;여기에 사진을 놓으세요</div></div>
+        </div>
+        <div class="editor-footer">
+          <div class="footer-left"><span class="status-dot"></span><span id="statusText">오프라인 사진 편집기 · 사진은 외부로 전송되지 않습니다.</span></div>
+          <div class="zoom-controls"><label for="zoomSlider">줌</label><button class="tool-btn small" id="fitBtn" disabled>맞춤</button><input type="range" id="zoomSlider" min="50" max="200" value="100" step="10" disabled><strong id="zoomValue">100%</strong></div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <div class="inspector-head">
+          <div class="sidebar-kicker">02 / ADJUSTMENTS</div>
+          <div class="inspector-heading"><h2>사진 보정</h2><button id="resetBtn" class="reset-btn" disabled>↺ 전체 초기화</button></div>
+          <p>빛과 색을 섬세하게 다듬어 보세요.</p>
+        </div>
+        <div class="sliders">
+          <section class="control-group">
+            <h3><span>◐</span> LIGHT <small>빛</small></h3>
+            <div class="slider-field"><div><label for="exposure">노출</label><output data-output="exposure">0.00</output></div><input data-key="exposure" id="exposure" type="range" min="-2" max="2" step=".05" value="0"></div>
+            <div class="slider-field"><div><label for="brightness">밝기</label><output data-output="brightness">0</output></div><input data-key="brightness" id="brightness" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="contrast">대비</label><output data-output="contrast">0</output></div><input data-key="contrast" id="contrast" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="highlights">하이라이트</label><output data-output="highlights">0</output></div><input data-key="highlights" id="highlights" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="shadows">그림자</label><output data-output="shadows">0</output></div><input data-key="shadows" id="shadows" type="range" min="-100" max="100" step="1" value="0"></div>
+          </section>
+          <section class="control-group">
+            <h3><span>✺</span> COLOR <small>색상</small></h3>
+            <div class="slider-field"><div><label for="temperature">색온도</label><output data-output="temperature">0</output></div><input data-key="temperature" id="temperature" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="tint">색조</label><output data-output="tint">0</output></div><input data-key="tint" id="tint" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="saturation">채도</label><output data-output="saturation">0</output></div><input data-key="saturation" id="saturation" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="vibrance">생동감</label><output data-output="vibrance">0</output></div><input data-key="vibrance" id="vibrance" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="hue">색상 이동</label><output data-output="hue">0°</output></div><input data-key="hue" id="hue" type="range" min="-180" max="180" step="1" value="0"></div>
+          </section>
+          <section class="control-group">
+            <h3><span>◈</span> DETAILS <small>디테일</small></h3>
+            <div class="slider-field"><div><label for="sharpness">선명도</label><output data-output="sharpness">0</output></div><input data-key="sharpness" id="sharpness" type="range" min="0" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="vignette">비네팅</label><output data-output="vignette">0</output></div><input data-key="vignette" id="vignette" type="range" min="-100" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="fade">페이드</label><output data-output="fade">0</output></div><input data-key="fade" id="fade" type="range" min="0" max="100" step="1" value="0"></div>
+            <div class="slider-field"><div><label for="grain">필름 입자</label><output data-output="grain">0</output></div><input data-key="grain" id="grain" type="range" min="0" max="100" step="1" value="0"></div>
+          </section>
+          <section class="export-panel">
+            <div class="export-title">EXPORT SETTINGS</div>
+            <label for="formatSelect">파일 형식</label><select id="formatSelect"><option value="jpeg">JPEG · 용량 절약</option><option value="png">PNG · 고품질</option></select>
+            <label for="qualitySlider" id="qualityLabel">JPEG 품질 <output id="qualityValue">92%</output></label>
+            <input id="qualitySlider" type="range" min="50" max="100" value="92">
+            <p>원본 비율을 유지하며 사진을 저장합니다. 고해상도 사진은 메모리 보호를 위해 최대 12MP로 출력합니다.</p>
+          </section>
+        </div>
+      </aside>
+    </main>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/bmp,image/gif,image/avif" hidden>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
