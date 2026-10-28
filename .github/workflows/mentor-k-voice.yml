@@ -41,11 +41,11 @@ jobs:
         run: npm run dist:win
       - name: Check actual Windows installer and embedded engine
         run: |
-          test -s 'dist/MENTOR_K_VOICE_Setup-0.2.0.exe'
+          test -s 'dist/MENTOR_K_VOICE_Setup-0.2.1.exe'
           test -s 'dist/win-unpacked/MENTOR.K VOICE STUDIO.exe'
           test -s 'dist/win-unpacked/resources/voice-engine/voice_engine.py'
           test -s 'dist/win-unpacked/resources/app.asar'
-          sha256sum 'dist/MENTOR_K_VOICE_Setup-0.2.0.exe' > 'dist/SHA256SUMS.txt'
+          sha256sum 'dist/MENTOR_K_VOICE_Setup-0.2.1.exe' > 'dist/SHA256SUMS.txt'
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
