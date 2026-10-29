@@ -1,6 +1,6 @@
 {
   "name": "mentor-k-voice-studio",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "MENTOR.K independent local AI voice studio",
   "main": "electron/main.cjs",
@@ -10,7 +10,8 @@
     "start": "electron .",
     "check": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check ui/app.js",
     "dist:win": "electron-builder --win nsis --x64 --publish never",
-    "dist:mac": "electron-builder --mac dmg zip --publish never"
+    "dist:mac": "electron-builder --mac dmg zip --publish never",
+    "test:utf8": "node tests/utf8-roundtrip.cjs"
   },
   "devDependencies": {
     "electron": "^38.2.2",

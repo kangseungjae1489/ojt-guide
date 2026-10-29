@@ -2,6 +2,10 @@
 """MENTOR.K local AI jobs. No external paid API calls. JSON stdin and stdout."""
 from __future__ import annotations
 import sys,json,os,wave,uuid,datetime,traceback,re,pathlib,math
+# Windows may default to CP949. Force UTF-8 JSON across Electron <-> Python IPC.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, 'reconfigure'):
+        _stream.reconfigure(encoding='utf-8', errors='replace')
 
 DATA=pathlib.Path(os.environ.get('MENTOR_K_DATA',str(pathlib.Path.home()/ 'MENTOR_K_DATA')))
 for part in ('profiles','outputs'):

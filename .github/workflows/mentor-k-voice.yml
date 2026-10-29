@@ -33,6 +33,8 @@ jobs:
         run: |
           python -m py_compile engine/voice_engine.py
           echo '{"segments":[{"start":0,"end":2.1,"text":"MENTOR K 확인"}],"format":"srt"}' | python engine/voice_engine.py export | grep -q 'MENTOR K'
+      - name: Test UTF-8 Korean, Mandarin and Japanese export round-trip
+        run: node tests/utf8-roundtrip.cjs
       - name: Install Electron dependencies
         run: npm install --no-audit --no-fund
       - name: Validate Electron application code
@@ -41,7 +43,7 @@ jobs:
         run: npm run dist:win
       - name: Check actual Windows installer and embedded engine
         run: |
-          test -s 'dist/MENTOR_K_VOICE_Setup-0.2.1.exe'
+          test -s 'dist/MENTOR_K_VOICE_Setup-0.2.2.exe'
           test -s 'dist/win-unpacked/MENTOR.K VOICE STUDIO.exe'
           test -s 'dist/win-unpacked/resources/voice-engine/voice_engine.py'
           test -s 'dist/win-unpacked/resources/app.asar'
@@ -74,7 +76,9 @@ jobs:
         with:
           python-version: '3.11'
       - name: Validate local voice engine scripts
-        run: python -m py_compile engine/voice_engine.py
+        run: |
+          python -m py_compile engine/voice_engine.py
+          node tests/utf8-roundtrip.cjs
       - name: Install Electron dependencies
         run: npm install --no-audit --no-fund
       - name: Verify Electron application syntax

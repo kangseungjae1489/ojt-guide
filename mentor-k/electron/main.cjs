@@ -14,7 +14,7 @@ const BOUND=350*1024*1024;
 let running=false;
 const userData=()=>path.join(app.getPath('userData'),'mentor-voice-data');
 const engineSource=()=>app.isPackaged?path.join(process.resourcesPath,'voice-engine','voice_engine.py'):path.join(__dirname,'..','engine','voice_engine.py');
-const env=()=>({...process.env,UV_PYTHON_INSTALL_DIR:path.join(userData(),'pythons'),UV_CACHE_DIR:path.join(userData(),'uv-cache'),UV_LINK_MODE:'copy',UV_NO_PROGRESS:'1',MENTOR_K_DATA:userData()});
+const env=()=>({...process.env,PYTHONUTF8:'1',PYTHONIOENCODING:'utf-8',PYTHONLEGACYWINDOWSSTDIO:'0',UV_PYTHON_INSTALL_DIR:path.join(userData(),'pythons'),UV_CACHE_DIR:path.join(userData(),'uv-cache'),UV_LINK_MODE:'copy',UV_NO_PROGRESS:'1',MENTOR_K_DATA:userData()});
 const status=(message)=>{if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send('mentor:progress',String(message).slice(0,500));};
 function ensureDirs(){for(const n of ['', 'recordings','outputs','profiles','engine','pythons'])fs.mkdirSync(path.join(userData(),n),{recursive:true});}
 function worker(cmd,args=[],options={}){
